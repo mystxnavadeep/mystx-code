@@ -22,7 +22,7 @@ jobs:
           # full history: the app's "What's new" page is generated from every commit of version.json
           fetch-depth: 0
 
-      # termux-am (termux/TermuxAm): am.apk is built from it for com.mystxcode.app. Only this submodule: the other folders
+      # termux-am (termux/TermuxAm): am.apk is built from it for com.mystxc. Only this submodule: the other folders
       # (termux-api, termux-x11, mystxcode_plugins) are embedded repos without a .gitmodules entry.
       - name: Fetch the termux-am submodule
         run: git submodule update --init --depth 1 termux-am

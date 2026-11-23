@@ -32,6 +32,6 @@ plugins {
 
 rootProject.name = "mystxcode"
 include(":app")
-// am.apk (the `am` command's Java code) from the termux-am submodule (termux/TermuxAm), built for com.mystxcode.app
+// am.apk (the `am` command's Java code) from the termux-am submodule (termux/TermuxAm), built for com.mystxc
 include(":termux-am")
 project(":termux-am").projectDir = file("termux-am-build")

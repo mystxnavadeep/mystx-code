@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Please read these first, they solve most install problems:
-        - Mystxcode's package name is **`com.mystxcode.app`**: it installs next to Termux and next to the old `com.termux` build of Mystxcode. To move your files from the old build, back up there (Settings → Backups & Restore → Back up environment) and pick that zip in the new app's setup (From a ZIP file).
+        - Mystxcode's package name is **`com.mystxc`**: it installs next to Termux and next to the old `com.termux` build of Mystxcode. To move your files from the old build, back up there (Settings → Backups & Restore → Back up environment) and pick that zip in the new app's setup (From a ZIP file).
         - Builds are for **arm64** phones.
 
         "Not installing" with no details will be **closed**. Write the **exact** error message.
