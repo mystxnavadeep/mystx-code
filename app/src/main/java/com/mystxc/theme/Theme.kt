@@ -106,9 +106,10 @@ fun GeminiTheme(
                 // (edge-to-edge), so the drawer and its scrim can extend over it. On targetSdk 28 an opaque colour
                 // is drawn on top of the app and hid the top of the drawer.
                 window.statusBarColor = android.graphics.Color.TRANSPARENT
-                window.navigationBarColor = colorScheme.background.toArgb()
-                // what shows behind the app during transitions: the theme, not the white splash layer
-                window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(colorScheme.background.toArgb()))
+                val windowBg = if (darkTheme) android.graphics.Color.rgb(7, 11, 20) else android.graphics.Color.rgb(242, 245, 250)
+                window.navigationBarColor = windowBg
+                // what shows behind the app during transitions: the ambient mesh backdrop, not the white splash layer
+                window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(windowBg))
                 val insetsController = WindowCompat.getInsetsController(window, view)
                 insetsController.isAppearanceLightStatusBars = !darkTheme
                 insetsController.isAppearanceLightNavigationBars = !darkTheme
@@ -122,7 +123,8 @@ fun GeminiTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
-            content = content
-        )
+        ) {
+            AmbientBackdrop { content() }
+        }
     }
 }

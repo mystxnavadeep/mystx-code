@@ -14,7 +14,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -31,6 +33,32 @@ object GlassTokens {
     /** Corner radii: 20dp cards/panels, 28dp pill bars. */
     val CardRadius = 20.dp
     val PillRadius = 28.dp
+
+    /** The ambient backdrop mesh behind everything (deep dark or soft light). */
+    val CanvasTop = Color(0xFF070B14)
+    val CanvasMid = Color(0xFF0F1629)
+    val CanvasEdge = Color(0xFF18102B)
+    val CanvasTopLight = Color(0xFFF2F5FA)
+    val CanvasMidLight = Color(0xFFE8EEF9)
+}
+
+/** A mesh-gradient backdrop behind every screen, with two soft glow orbs over it. */
+@Composable
+fun AmbientBackdrop(content: @Composable () -> Unit) {
+    val dark = ThemeManager.isDark
+    Box(
+        Modifier
+            .fillMaxSize()
+            .drawWithContent {
+                drawRect(
+                    if (dark) Brush.verticalGradient(GlassTokens.CanvasTop, GlassTokens.CanvasMid, GlassTokens.CanvasEdge)
+                    else Brush.verticalGradient(GlassTokens.CanvasTopLight, GlassTokens.CanvasMidLight)
+                )
+                drawCircle(Color(0x4D00E5FF), radius = size.width * 0.82f, center = Offset(size.width * -0.1f, size.height * -0.1f))
+                drawCircle(Color(0x399D4EDD), radius = size.width * 0.55f, center = Offset(size.width * 1.12f, size.height * 0.92f))
+                drawContent()
+            }
+    ) { content() }
 }
 
 /**

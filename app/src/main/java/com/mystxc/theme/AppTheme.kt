@@ -307,8 +307,8 @@ object ThemeTokens {
 
 /** The themes that come with the app. */
 object BuiltInThemes {
-    const val LIGHT_DEFAULT = "mystxcode_light"
-    const val DARK_DEFAULT = "midnight_aurora"
+    const val LIGHT_DEFAULT = "glass_light"
+    const val DARK_DEFAULT = "glass_dark"
     /** The original mystxcode dark look (no longer the default; the id stays so a saved choice still finds it). */
     private const val MYSTXCODE_DARK = "mystxcode_dark"
 
@@ -389,6 +389,81 @@ object BuiltInThemes {
         )
     )
 
+    /** The default dark theme: iOS 18+ glassmorphism — deep ambient mesh, frosted translucent surfaces, cyan + violet accents. */
+    private fun glassDark() = AppTheme(
+        id = DARK_DEFAULT, name = "Glass", dark = true, builtIn = true,
+        about = "iOS 18+ glassmorphism: deep ambient mesh, frosted translucent surfaces, cyan and violet accents",
+        colors = linkedMapOf(
+            "background" to 0x00070B14L, "on_background" to 0xFFF8FAFCL,
+            "surface" to 0x900E1526L, "surface_variant" to 0x661C2738L,
+            "surface_container_lowest" to 0x33070B14L, "surface_container_low" to 0x440E1526L,
+            "surface_container" to 0x660E1526L, "surface_container_high" to 0x520E1526L, "surface_container_highest" to 0x5E121A2EL,
+            "on_surface" to 0xFFF8FAFCL, "on_surface_variant" to 0xFF94A3B8L,
+            "outline" to 0x50FFFFFFL, "outline_variant" to 0x26FFFFFFL, "border" to 0x2EFFFFFFL, "fill" to 0x12FFFFFFL,
+            "error" to 0xFFFF453AL, "on_error" to 0xFF0B0F18L, "error_container" to 0x33FF453AL,
+            "inverse_surface" to 0xFFF8FAFCL, "inverse_on_surface" to 0x00070B14L, "inverse_primary" to 0xFF00E5FFL,
+            "card" to 0x8C0E1526L, "text_secondary" to 0xFF94A3B8L,
+            "primary" to 0xFF00E5FFL, "on_primary" to 0xFF001318L, "primary_container" to 0x3300E5FFL, "on_primary_container" to 0xFFB8F6FFL,
+            "secondary" to 0xFF9D4EDDL, "on_secondary" to 0xFF14081FL, "secondary_container" to 0x339D4EDDL, "on_secondary_container" to 0xFFE4D2FBL,
+            "tertiary" to 0xFF7DD3FCL, "on_tertiary" to 0xFF0B0F18L, "tertiary_container" to 0x337DD3FCL, "on_tertiary_container" to 0xFFD0EBFFL,
+            "accent_alt" to 0xFF9D4EDDL, "accent_indigo" to 0xFF818CF8L, "accent_teal" to 0xFF7DD3FCL, "accent_pink" to 0xFFF472B6L,
+            "success" to 0xFF30D158L, "warning" to 0xFFFFD60AL, "danger" to 0xFFFF453AL, "info" to 0xFF64D2FFL,
+            "success_container" to 0x1F30D158L, "warning_container" to 0x1FFFFD60L, "danger_container" to 0x1FFFF45L, "info_container" to 0x2064D2FFL,
+            "user_bubble" to 0x2E00E5FFL, "thinking_bg" to 0x1A0E1526L,
+            "code_bg" to 0xCC0A0E1AL, "code_text" to 0xFFE6EDF3L,
+            "syntax_keyword" to 0xFFC4A7FFL, "syntax_type" to 0xFF5EEAD4L, "syntax_string" to 0xFF9AE6B4L,
+            "syntax_number" to 0xFFFFB86BL, "syntax_comment" to 0xFF7F848EL, "syntax_function" to 0xFF7DB5FFL,
+            "syntax_annotation" to 0xFFF4A9D8L, "syntax_punctuation" to 0xFF8991B3L, "syntax_control" to 0xFFC4A7FFL,
+            "syntax_tag" to 0xFF7DB5FFL, "syntax_attribute" to 0xFF5EEAD4L,
+            "editor_bg" to 0xFF05070DL, "editor_panel" to 0xFF0B1020L, "editor_text" to 0xFFD4D4D4L, "editor_muted" to 0xFF888888L,
+            "editor_border" to 0xFF1C2230L, "editor_selection" to 0xFF264F78L, "editor_line" to 0xFF0F1521L,
+            "editor_added_bg" to 0xFF1B4728L, "editor_added_text" to 0xFFB9F6CAL, "editor_removed_bg" to 0xFF4B1E1EL, "editor_removed_text" to 0xFFFFCDD2L,
+            "editor_info_bg" to 0xFF1E293BL, "editor_info_text" to 0xFF90CAF9L,
+            "terminal_bg" to 0xFF05070DL, "terminal_fg" to 0xFFE6EDF3L, "terminal_cursor" to 0xFF00E5FFL,
+            "ansi_0" to 0xFF2A2D3AL, "ansi_1" to 0xFFFF453AL, "ansi_2" to 0xFF30D158L, "ansi_3" to 0xFFFFD60AL,
+            "ansi_4" to 0xFF64D2FFL, "ansi_5" to 0xFF9D4EDDL, "ansi_6" to 0xFF5EEAD4L, "ansi_7" to 0xFFB3B8D0L,
+            "ansi_8" to 0xFF5D6173L, "ansi_9" to 0xFFFF97A3L, "ansi_10" to 0xFF85E7A1L, "ansi_11" to 0xFFFDD072L,
+            "ansi_12" to 0xFF89BCFDL, "ansi_13" to 0xFFCFA4FFL, "ansi_14" to 0xFF79DFCFL, "ansi_15" to 0xFFF8FAFCL
+        )
+    )
+
+    /** The default light theme: iOS 18+ glassmorphism, light variant — soft frosted surfaces over a pale mesh. */
+    private fun glassLight() = AppTheme(
+        id = LIGHT_DEFAULT, name = "Glass", dark = false, builtIn = true,
+        about = "iOS 18+ glassmorphism, light variant: soft frosted surfaces over a pale mesh",
+        colors = linkedMapOf(
+            "background" to 0x00F2F5FAL, "on_background" to 0xFF1E293BL,
+            "surface" to 0xEEFFFFFFL, "surface_variant" to 0xE4F4FCFF, "surface_container" to 0xD6FFFFFF,
+            "surface_container_lowest" to 0x50F2F5FA, "surface_container_low" to 0xA6F2F5FAL,
+            "surface_container_high" to 0xCAF2F5FA, "surface_container_highest" to 0xD4F2F5FA,
+            "on_surface" to 0xFF16202EL, "on_surface_variant" to 0xFF64748BL,
+            "outline" to 0x33000000L, "outline_variant" to 0x12000000L, "border" to 0x1C000000L, "fill" to 0x10000000L,
+            "error" to 0xFFDC2626L, "on_error" to 0xFFFFFFFF, "error_container" to 0x33FF453AL,
+            "inverse_surface" to 0xFF1E293BL, "inverse_on_surface" to 0x00F2F5FA, "inverse_primary" to 0xFF0077BFL,
+            "card" to 0xF0FFFFFFL, "text_secondary" to 0xFF64748BL,
+            "primary" to 0xFF0077BFL, "on_primary" to 0xFFFFFFFF, "primary_container" to 0x1F0077BFL, "on_primary_container" to 0xFF0A2738L,
+            "secondary" to 0xFF7C3AEDL, "on_secondary" to 0xFFFFFFFF, "secondary_container" to 0x1F7C3AEDL, "on_secondary_container" to 0xFFEAD9FF,
+            "tertiary" to 0xFF2563EBL, "on_tertiary" to 0xFFFFFFFF, "tertiary_container" to 0x1F2563EBL, "on_tertiary_container" to 0xFFD6E4FFL,
+            "success" to 0xFF16A34AL, "warning" to 0xFFD97606L, "danger" to 0xFFDC2626L, "info" to 0xFF2563EBL,
+            "success_container" to 0x1FE8F5E9L, "warning_container" to 0x1FFFF3E0L, "danger_container" to 0x1FFEF2F2L, "info_container" to 0x1FE3F2FDL,
+            "user_bubble" to 0x2E0077BFL, "thinking_bg" to 0x14F2F5FA,
+            "code_bg" to 0xF7F9FCFFL, "code_text" to 0xFF24292FL,
+            "syntax_keyword" to 0xFFC678DDL, "syntax_type" to 0xFFE5C07BL, "syntax_string" to 0xFF98C379L,
+            "syntax_number" to 0xFFD19A66L, "syntax_comment" to 0xFF7F848EL, "syntax_function" to 0xFF61AFEFL,
+            "syntax_annotation" to 0xFFE5C07BL, "syntax_punctuation" to 0xFFABB2BFL, "syntax_control" to 0xFFC678DDL,
+            "syntax_tag" to 0xFFE06C75L, "syntax_attribute" to 0xFFD19A66L,
+            "editor_bg" to 0xFFF7F9FCL, "editor_panel" to 0xFF252526L, "editor_text" to 0xFFD4D4D4L, "editor_muted" to 0xFF888888L,
+            "editor_border" to 0xFF3C3C3CL, "editor_selection" to 0xFF264F78L, "editor_line" to 0xFF2D2D2DL,
+            "editor_added_bg" to 0xFF1B4728L, "editor_added_text" to 0xFFB9F6CAL, "editor_removed_bg" to 0xFF4B1E1EL, "editor_removed_text" to 0xFFFFCDD2L,
+            "editor_info_bg" to 0xFF1E293BL, "editor_info_text" to 0xFF90CAF9L,
+            "terminal_bg" to 0xFF05070DL, "terminal_fg" to 0xFFE6EDF3L, "terminal_cursor" to 0xFF0077BFL,
+            "ansi_0" to 0xFF0B0F14L, "ansi_1" to 0xFFDC2626L, "ansi_2" to 0xFF16A34AL, "ansi_3" to 0xFFD97606L,
+            "ansi_4" to 0xFF2563EBL, "ansi_5" to 0xFF7C3AEDL, "ansi_6" to 0xFF0077BFL, "ansi_7" to 0xFF404040L,
+            "ansi_8" to 0xFF6B7280L, "ansi_9" to 0xFFF87171L, "ansi_10" to 0xFF4ADE80L, "ansi_11" to 0xFFFBBF24L,
+            "ansi_12" to 0xFF3B82F6L, "ansi_13" to 0xFF8B5CF6L, "ansi_14" to 0xFF22D3EE, "ansi_15" to 0xFFF8FAFCL
+        )
+    )
+
     /** A full theme from a few colors; everything else is worked out ([ThemeTokens.derive]). */
     private fun seeded(
         id: String, name: String, about: String, dark: Boolean,
@@ -408,6 +483,8 @@ object BuiltInThemes {
 
     val all: List<AppTheme> by lazy {
         listOf(
+            // iOS 18+ glassmorphism is the default of both sides
+            glassLight(), glassDark(),
             // light, best first: the first is the default and the first RECOMMENDED_COUNT are marked as recommended
             mystxcode(false),
             seeded("lavender", "Lavender", "Soft lilac with a violet accent", false,
