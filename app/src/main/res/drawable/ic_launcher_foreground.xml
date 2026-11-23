@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- mystxcode mark: a centered geometric monogram "M" (two vertical bars + a bottom-center chevron)
+     in crisp white (#FFFFFF), with a refined cyan-to-violet accent stroke (#00E5FF to #8B5CF6).
+     No text, no busy gradients, no AI-style textures. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Accent stroke: a thin diagonal from bottom-left to top-right -->
+    <path android:pathData="M30,32L80,62" android:fillColor="@android:color/transparent"
+        android:strokeWidth="6" android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="30" android:startY="32"
+                android:endX="80" android:endY="62">
+                <item android:offset="0" android:color="#3300E5FF" />
+                <item android:offset="1" android:color="#338B5CF6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- The M: two vertical bars (36..44, 64..72) and the bottom-center chevron -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M36,20h8v62h-8z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M64,20h8v62h-8z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M44,20L54,84L64,20Z" />
+</vector>

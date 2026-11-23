@@ -1,0 +1,157 @@
+name: Release APK
+
+# The mystxcode release APK, built and published completely on GitHub Actions (no local Android SDK needed).
+# Triggered by:
+#   - tag pushes matching "v*" (v1, v2, v3, v1.0.0, v2.1.0, …)
+#   - a manual run from the Actions tab (workflow_dispatch, version_tag input, e.g. v1, v2, v3)
+#
+# Secrets needed on the repository (Settings → Secrets and variables → Actions):
+#   KEYSTORE_BASE64   — base64 of the .jks keystore (see the job summary for how to create it)
+#   KEYSTORE_PASSWORD — the keystore password
+#   KEY_ALIAS         — the alias of the release key
+#   KEY_PASSWORD      — the key password
+#
+# The VERSION_NAME (tag without the "v") and the incrementing VERSION_CODE (tag number, or the run number)
+# are derived by this workflow and passed to the Gradle build (app/build.gradle.kts reads them from the
+# environment).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "Release tag to build and publish (e.g. v1, v2, v3, v1.0.0)"
+        required: true
+        default: "v1"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Go (the app builds the IDE bridge from agy_ide_bridge during the build)
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Set up Gradle (build cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up the Android toolchain (SDK build-tools incl. apksigner, on ubuntu-latest or installed)
+        shell: bash
+        run: |
+          set -eu
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "$SDK" ] || [ -z "$(ls -A "$SDK" 2>/dev/null)" ]; then
+            echo "No Android SDK found; downloading the command-line tools"
+            SDK="$HOME/android-sdk"
+            mkdir -p "$SDK/cmdline-tools" "$SDK/platform-tools" "$SDK/build-tools"
+            curl -sS -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+            unzip -q cmdline-tools.zip -d cmdline-tools.extract
+            mv cmdline-tools.extract/cmdline-tools "$SDK/cmdline-tools/latest"
+            rm -rf cmdline-tools.zip cmdline-tools.extract
+          fi
+          export ANDROID_HOME="$SDK"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner -type f 2>/dev/null | sort -V | tail -1)
+          if [ -z "$APKSIGNER" ]; then
+            echo "No apksigner in $ANDROID_HOME/build-tools; installing one"
+            export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+            sdkmanager "build-tools;35.0.0" >/dev/null 2>&1 || true
+            APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner -type f 2>/dev/null | sort -V | tail -1)
+          fi
+          [ -n "$APKSIGNER" ] || { echo "apksigner not found — cannot verify the signature"; exit 1; }
+          echo "apksigner=$APKSIGNER" >> "$GITHUB_ENV"
+
+      - name: Derive VERSION_NAME and VERSION_CODE from the tag
+        shell: bash
+        run: |
+          set -eu
+          TAG="${{ inputs.version_tag || github.ref_name }}"
+          if [ -z "$TAG" ] || [ "$TAG" = "refs/tags/" ]; then
+            echo "no tag to build" >&2; exit 1
+          fi
+          case "$TAG" in refs/tags/*) TAG="${TAG#refs/tags/}";; esac
+          VERSION_NAME="${TAG#v}"
+          DIGITS="$(printf '%s' "$TAG" | tr -cd '0-9')"
+          if [ -z "$DIGITS" ]; then DIGITS="${{ github.run_number }}"; fi
+          VERSION_CODE=$((10#$DIGITS))
+          {
+            echo "VERSION_NAME=$VERSION_NAME"
+            echo "VERSION_CODE=$VERSION_CODE"
+            echo "TAG=$TAG"
+          } >> "$GITHUB_ENV"
+          echo "Building mystxcode-$TAG (versionCode $VERSION_CODE)"
+
+      - name: Decode secrets.KEYSTORE_BASE64 into a temporary .jks (never committed)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -eu
+          [ -n "$KEYSTORE_BASE64" ] || { echo "secrets.KEYSTORE_BASE64 is not set"; exit 1; }
+          KEYSTORE="$GITHUB_WORKSPACE/mystx-release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
+          {
+            echo "KEYSTORE_PATH=$KEYSTORE"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+          echo "keystore ready at $KEYSTORE"
+
+      - name: Build the signed release APK
+        run: ./gradlew assembleRelease
+
+      - name: Locate and rename the output APK to mystxcode-<tag>.apk
+        id: rename
+        shell: bash
+        run: |
+          set -eu
+          APK=$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' | sort | head -1)
+          [ -n "$APK" ] || { echo "no release APK was produced"; exit 1; }
+          echo "found: $APK"
+          OUT="mystxcode-${{ env.TAG }}.apk"
+          mv "$APK" "$OUT"
+          ls -la "$OUT"
+          echo "apk=$OUT" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the APK signature (apksigner verify)
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="${{ steps.rename.outputs.apk }}"
+          "$APKSIGNER" verify --verbose "$APK" | tail -5
+
+      - name: Upload the signed APK as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TAG }}
+          path: ${{ steps.rename.outputs.apk }}
+          retention-days: 30
+
+      - name: Publish the GitHub Release (softprops/action-gh-release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: mystxcode ${{ env.TAG }}
+          generate_release_notes: true
+          files: ${{ steps.rename.outputs.apk }}
+
+      - name: Clean up the temporary keystore
+        run: rm -f "$KEYSTORE_PATH"

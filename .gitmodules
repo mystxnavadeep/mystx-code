@@ -1,0 +1,21 @@
+[submodule "termux-am"]
+	path = termux-am
+	url = https://github.com/termux/TermuxAm.git
+[submodule "termux-api"]
+	path = termux-api
+	url = https://github.com/Santoshkurmi/termux-api.git
+[submodule "termux-x11"]
+	path = termux-x11
+	url = https://github.com/Santoshkurmi/termux-x11.git
+[submodule "mystxcode-vscode"]
+	path = mystxcode-vscode
+	url = https://github.com/mystxnavadeep/mystx-code_vscode_extension.git
+[submodule "mystxcode-chrome-extension"]
+	path = mystxcode-chrome-extension
+	url = https://github.com/mystxnavadeep/mystx-code-browser-extension.git
+[submodule "mystxcode_mini_apps"]
+	path = mystxcode_mini_apps
+	url = https://github.com/mystxnavadeep/mystx-code_mini_apps
+[submodule "mystxcode_plugins"]
+	path = mystxcode_plugins
+	url = https://github.com/mystxnavadeep/mystx-code_plugins

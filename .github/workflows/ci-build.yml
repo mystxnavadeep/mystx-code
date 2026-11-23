@@ -1,0 +1,39 @@
+name: CI build
+
+# Fast debug build on every push to main and every PR to main: verifies the code compiles cleanly
+# before a release can be tagged. See .github/workflows/release-apk.yml for the signed releases.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Go (the app builds the IDE bridge from agy_ide_bridge during the build)
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Set up Gradle (build cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the debug APK (a fast check that everything compiles)
+        run: ./gradlew assembleDebug
