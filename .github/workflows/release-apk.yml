@@ -77,7 +77,7 @@ jobs:
             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner -type f 2>/dev/null | sort -V | tail -1)
           fi
           [ -n "$APKSIGNER" ] || { echo "apksigner not found — cannot verify the signature"; exit 1; }
-          echo "apksigner=$APKSIGNER" >> "$GITHUB_ENV"
+          echo "APKSIGNER=$APKSIGNER" >> "$GITHUB_ENV"
 
       - name: Derive VERSION_NAME and VERSION_CODE from the tag
         shell: bash
