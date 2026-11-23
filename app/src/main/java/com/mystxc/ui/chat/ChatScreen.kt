@@ -1677,8 +1677,8 @@ fun ChatScreen(
                     expandedHeight = 52.dp,
                     // the chat's header is a frosted glass bar (iOS 18+ glassmorphism)
                     colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-                        containerColor = com.mystxc.theme.GlassTokens.SurfaceFill.copy(alpha = 0.10f),
-                        scrolledContainerColor = com.mystxc.theme.GlassTokens.SurfaceFill.copy(alpha = 0.16f)
+                        containerColor = com.mystxc.theme.GlassTokens.SurfaceTint.copy(alpha = 0.10f),
+                        scrolledContainerColor = com.mystxc.theme.GlassTokens.SurfaceTint.copy(alpha = 0.16f)
                     ),
                     modifier = Modifier.drawWithContent {
                         drawContent()
@@ -1999,10 +1999,7 @@ fun ChatScreen(
                                 )
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
+                    }
                 )
             },
             containerColor = MaterialTheme.colorScheme.background,

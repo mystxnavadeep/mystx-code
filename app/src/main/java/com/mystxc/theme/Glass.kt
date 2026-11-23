@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +54,7 @@ fun Modifier.glassSurface(
 fun GlassCard(
     modifier: Modifier = Modifier,
     radius: Dp = GlassTokens.CardRadius,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable () -> Unit
 ) {
     Surface(modifier = modifier.glassSurface(radius), content = content)
 }
