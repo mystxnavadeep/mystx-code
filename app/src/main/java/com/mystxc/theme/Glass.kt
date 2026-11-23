@@ -51,8 +51,8 @@ fun AmbientBackdrop(content: @Composable () -> Unit) {
             .fillMaxSize()
             .drawWithContent {
                 drawRect(
-                    if (dark) Brush.verticalGradient(GlassTokens.CanvasTop, GlassTokens.CanvasMid, GlassTokens.CanvasEdge)
-                    else Brush.verticalGradient(GlassTokens.CanvasTopLight, GlassTokens.CanvasMidLight)
+                    if (dark) Brush.verticalGradient(listOf(GlassTokens.CanvasTop, GlassTokens.CanvasMid, GlassTokens.CanvasEdge))
+                    else Brush.verticalGradient(listOf(GlassTokens.CanvasTopLight, GlassTokens.CanvasMidLight))
                 )
                 drawCircle(Color(0x4D00E5FF), radius = size.width * 0.82f, center = Offset(size.width * -0.1f, size.height * -0.1f))
                 drawCircle(Color(0x399D4EDD), radius = size.width * 0.55f, center = Offset(size.width * 1.12f, size.height * 0.92f))
