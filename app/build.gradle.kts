@@ -169,6 +169,9 @@ android {
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "123456"
             keyAlias = System.getenv("KEY_ALIAS") ?: "mystxcode"
             keyPassword = System.getenv("KEY_PASSWORD") ?: "123456"
+            // The CI keystore (secrets.KEYSTORE_BASE64) is a PKCS12 store; pin the type so it loads
+            // correctly on any JDK regardless of the default keystore type.
+            storeType = "PKCS12"
             enableV2Signing = true
         }
     }
