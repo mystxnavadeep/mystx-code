@@ -91,4 +91,4 @@
 -keep class * extends androidx.room.RoomDatabase { <init>(); }
 
 # Shizuku starts this class by name (from this APK) in a process of its own
--keep class com.mystxcode.app.data.adb.DeviceShellService { <init>(...); }
+-keep class com.mystxc.data.adb.DeviceShellService { <init>(...); }

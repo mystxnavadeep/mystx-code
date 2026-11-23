@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- mystxcode splash wordmark: the app's geometric M mark, the same letter used in the launcher icon. -->
+<!-- mystxcode splash wordmark: a centered geometric M mark, white on the dark splash background. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="200dp"
     android:height="80dp"
     android:viewportWidth="200"
-    android:viewportHeight="200">
-    <path android:fillColor="#FF000000" android:pathData="M60,32h8v52h-8z" />
-    <path android:fillColor="#FF000000" android:pathData="M92,32h8v52h-8z" />
-    <path android:fillColor="#FF000000" android:pathData="M70,32L98,104L102,32Z" />
+    android:viewportHeight="80">
+    <!-- left vertical bar of the M -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M56,14h16v52H56Z" />
+    <!-- right vertical bar of the M -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M128,14h16v52H128Z" />
+    <!-- the chevron: the two bars' tops meet the bottom-center point -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M72,14L100,60L128,14Z" />
 </vector>

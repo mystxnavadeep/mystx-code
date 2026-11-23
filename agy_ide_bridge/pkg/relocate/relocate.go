@@ -1,11 +1,12 @@
-// Package relocate rewrites Termux .deb packages for an app with another package name (com.termux ->
-// com.mystxcode.app), in one streaming pass per package and several packages at once. It is the bridge's
+// Package relocate rewrites Termux .deb packages for an app with another package name of the same length
+// (com.termux -> ai.antigem), in one streaming pass per package and several packages at once. It is the bridge's
 // `relocate-debs` command (see Main).
 //
-// Mystxcode's apt hook (libexec/mystxcode/relocate-debs, written by TermuxRelocation.kt) runs
+// AntiGem's apt hook (libexec/antigem/relocate-debs, written by TermuxRelocation.kt) runs
 // `agy_ide_bridge relocate-debs` with the .deb paths on stdin, as apt's DPkg::Pre-Install-Pkgs gives them; the dpkg
 // wrapper runs it for .debs given by hand. Each package is decompressed once, every "from" in its file paths,
-// contents, symlinks and maintainer scripts becomes "to" (the replacement may change lengths), and the result is
+// contents, symlinks and maintainer scripts becomes "to" while the bytes stream past (both names have the same
+// length, so no size changes: only the tar headers' checksums and the md5sums list are recomputed), and the result is
 // written as a new .deb that replaces the old one. Packages without "from" are left untouched.
 package relocate
 
@@ -48,8 +49,8 @@ func Main(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, Capability)
 		return 0
 	}
-	if len(*to) == 0 {
-		fmt.Fprintf(stderr, "relocate-debs: --to must not be empty\n")
+	if len(*to) == 0 || len(*to) != len(*from) {
+		fmt.Fprintf(stderr, "relocate-debs: --to must have the length of %q\n", *from)
 		return 2
 	}
 	rw := newRewriter(*from, *to, keep, strings.Split(*skipExt, ","))
@@ -92,10 +93,10 @@ func Main(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 				changed, err := relocateDeb(p, rw)
 				mu.Lock()
 				if err != nil {
-					fmt.Fprintf(stderr, "Mystxcode: could not adapt %s: %v\n", p, err)
+					fmt.Fprintf(stderr, "AntiGem: could not adapt %s: %v\n", p, err)
 					failed = true
 				} else if changed {
-					fmt.Fprintf(stdout, "Mystxcode: adapted %s for %s\n", p[strings.LastIndex(p, "/")+1:], *to)
+					fmt.Fprintf(stdout, "AntiGem: adapted %s for %s\n", p[strings.LastIndex(p, "/")+1:], *to)
 				}
 				mu.Unlock()
 			}

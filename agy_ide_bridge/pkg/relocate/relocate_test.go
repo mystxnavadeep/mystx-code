@@ -16,36 +16,28 @@ import (
 )
 
 func testRewriter() *rewriter {
-	return newRewriter("com.termux", "com.mystxcode.app", []string{".termuxam", ".x11."}, []string{"apk", "jar", "zip"})
-}
-
-// a same-length target for the streaming rewriter (rewriteIn cannot change lengths)
-func sameLengthRewriter() *rewriter {
-	return newRewriter("com.termux", "ai.antigem", []string{".termuxam", ".x11."}, []string{"apk", "jar", "zip"})
+	return newRewriter("com.termux", "com.mystxc", []string{".termuxam", ".x11."}, []string{"apk", "jar", "zip"})
 }
 
 // reference: the same rule on a whole buffer, the simple way
-func referenceRewrite(b, to []byte) []byte {
-	out := make([]byte, 0, len(b))
-	i := 0
-	for i+10 <= len(b) {
-		if string(b[i:i+10]) == "com.termux" {
-			if !strings.HasPrefix(string(b[i+10:]), ".termuxam") && !strings.HasPrefix(string(b[i+10:]), ".x11.") {
-				out = append(out, to...)
-			} else {
-				out = append(out, b[i:i+10]...)
+func referenceRewrite(b []byte) []byte {
+	out := append([]byte(nil), b...)
+	for i := 0; i+10 <= len(out); {
+		if string(out[i:i+10]) == "com.termux" {
+			rest := string(out[i+10:])
+			if !strings.HasPrefix(rest, ".termuxam") && !strings.HasPrefix(rest, ".x11.") {
+				copy(out[i:], "com.mystxc")
 			}
 			i += 10
 		} else {
-			out = append(out, b[i])
 			i++
 		}
 	}
-	return append(out, b[i:]...)
+	return out
 }
 
 func TestCopyRewrittenAgreesWithReference(t *testing.T) {
-	rw := sameLengthRewriter()
+	rw := testRewriter()
 	rnd := rand.New(rand.NewSource(1))
 	pieces := []string{"com.termux", "/com.termux/", "com.termux.termuxam.Am", "com.termux.x11.Loader", "com.termux.x11", "com.termu", "x"}
 	for round := 0; round < 40; round++ {
@@ -69,7 +61,7 @@ func TestCopyRewrittenAgreesWithReference(t *testing.T) {
 		if _, err := rw.copyRewritten(&out, bytes.NewReader(b), int64(len(b)), h, nil); err != nil {
 			t.Fatal(err)
 		}
-		want := referenceRewrite(b, []byte("ai.antigem"))
+		want := referenceRewrite(b)
 		if !bytes.Equal(out.Bytes(), want) {
 			t.Fatalf("round %d (size %d): differs from the reference", round, size)
 		}
@@ -135,7 +127,7 @@ func TestRewriteTar(t *testing.T) {
 			{hdr: tar.Header{Name: "./data/data/com.termux/files/usr/lib/big", Typeflag: tar.TypeReg, Mode: 0644}, content: big},
 		})
 		var out bytes.Buffer
-		res, err := sameLengthRewriter().rewriteTar(&out, bytes.NewReader(in), nil)
+		res, err := testRewriter().rewriteTar(&out, bytes.NewReader(in), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -143,76 +135,27 @@ func TestRewriteTar(t *testing.T) {
 			t.Fatal("not changed")
 		}
 		got := readTar(t, out.Bytes())
-		if _, ok := got["./data/data/ai.antigem/files/usr/bin/"]; !ok {
+		if _, ok := got["./data/data/com.mystxc/files/usr/bin/"]; !ok {
 			t.Fatalf("%v: directory not renamed: %v", format, keys(got))
 		}
-		am := got["./data/data/ai.antigem/files/usr/bin/am"].content
-		if am != "#!/data/data/ai.antigem/files/usr/bin/sh\nexec app_process / com.termux.termuxam.Am\n" {
+		am := got["./data/data/com.mystxc/files/usr/bin/am"].content
+		if am != "#!/data/data/com.mystxc/files/usr/bin/sh\nexec app_process / com.termux.termuxam.Am\n" {
 			t.Fatalf("%v: am = %q", format, am)
 		}
-		if l := got["./data/data/ai.antigem/files/usr/bin/sh"].hdr.Linkname; l != "/data/data/ai.antigem/files/usr/bin/dash" {
+		if l := got["./data/data/com.mystxc/files/usr/bin/sh"].hdr.Linkname; l != "/data/data/com.mystxc/files/usr/bin/dash" {
 			t.Fatalf("%v: link target %q", format, l)
 		}
-		newLong := strings.ReplaceAll(long, "com.termux", "ai.antigem")
-		if e, ok := got[newLong]; !ok || e.content != "ai.antigem" {
+		newLong := strings.ReplaceAll(long, "com.termux", "com.mystxc")
+		if e, ok := got[newLong]; !ok || e.content != "com.mystxc" {
 			t.Fatalf("%v: long name entry missing or wrong: %v", format, keys(got))
 		}
-		if c := got["./data/data/ai.antigem/files/usr/share/x.apk"].content; c != "com.termux in a zip" {
+		if c := got["./data/data/com.mystxc/files/usr/share/x.apk"].content; c != "com.termux in a zip" {
 			t.Fatalf("%v: skipped extension rewritten: %q", format, c)
 		}
-		if c := got["./data/data/ai.antigem/files/usr/lib/big"].content; c != string(referenceRewrite([]byte(big), []byte("ai.antigem"))) {
+		if c := got["./data/data/com.mystxc/files/usr/lib/big"].content; c != string(referenceRewrite([]byte(big))) {
 			t.Fatalf("%v: big file wrong", format)
 		}
-		if res.md5s["data/data/ai.antigem/files/usr/bin/am"] != md5sum([]byte(am)) {
-			t.Fatalf("%v: md5 of am wrong", format)
-		}
-	}
-}
-
-// The length-changing path (rewriteTarAll, the one the bridge actually uses with com.mystxcode.app): the same
-// tar read back and checked.
-func TestRewriteTarAll(t *testing.T) {
-	long := "./data/data/com.termux/files/usr/lib/" + strings.Repeat("deep/", 30) + "com.termux.file.txt"
-	big := strings.Repeat("x", chunkSize-4) + "/data/data/com.termux/files" + strings.Repeat("y", chunkSize) + "com.termux.termuxam"
-	for _, format := range []tar.Format{tar.FormatGNU, tar.FormatPAX} {
-		in := buildTar(t, format, []entry{
-			{hdr: tar.Header{Name: "./data/data/com.termux/files/usr/bin/", Typeflag: tar.TypeDir, Mode: 0755}},
-			{hdr: tar.Header{Name: "./data/data/com.termux/files/usr/bin/am", Typeflag: tar.TypeReg, Mode: 0755},
-				content: "#!/data/data/com.termux/files/usr/bin/sh\nexec app_process / com.termux.termuxam.Am\n"},
-			{hdr: tar.Header{Name: "./data/data/com.termux/files/usr/bin/sh", Typeflag: tar.TypeSymlink, Linkname: "/data/data/com.termux/files/usr/bin/dash"}},
-			{hdr: tar.Header{Name: long, Typeflag: tar.TypeReg, Mode: 0644}, content: "com.termux"},
-			{hdr: tar.Header{Name: "./data/data/com.termux/files/usr/share/x.apk", Typeflag: tar.TypeReg, Mode: 0644}, content: "com.termux in a zip"},
-			{hdr: tar.Header{Name: "./data/data/com.termux/files/usr/lib/big", Typeflag: tar.TypeReg, Mode: 0644}, content: big},
-		})
-		out, res, err := testRewriter().rewriteTarAll(bytes.NewReader(in), testRewriter(), nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !res.changed {
-			t.Fatal("not changed")
-		}
-		got := readTar(t, out)
-		if _, ok := got["./data/data/com.mystxcode.app/files/usr/bin/"]; !ok {
-			t.Fatalf("%v: directory not renamed: %v", format, keys(got))
-		}
-		am := got["./data/data/com.mystxcode.app/files/usr/bin/am"].content
-		if am != "#!/data/data/com.mystxcode.app/files/usr/bin/sh\nexec app_process / com.termux.termuxam.Am\n" {
-			t.Fatalf("%v: am = %q", format, am)
-		}
-		if l := got["./data/data/com.mystxcode.app/files/usr/bin/sh"].hdr.Linkname; l != "/data/data/com.mystxcode.app/files/usr/bin/dash" {
-			t.Fatalf("%v: link target %q", format, l)
-		}
-		newLong := strings.ReplaceAll(long, "com.termux", "com.mystxcode.app")
-		if e, ok := got[newLong]; !ok || e.content != "com.mystxcode.app" {
-			t.Fatalf("%v: long name entry missing or wrong: %v", format, keys(got))
-		}
-		if c := got["./data/data/com.mystxcode.app/files/usr/share/x.apk"].content; c != "com.termux in a zip" {
-			t.Fatalf("%v: skipped extension rewritten: %q", format, c)
-		}
-		if c := got["./data/data/com.mystxcode.app/files/usr/lib/big"].content; c != string(referenceRewrite([]byte(big), []byte("com.mystxcode.app"))) {
-			t.Fatalf("%v: big file wrong", format)
-		}
-		if res.md5s["data/data/com.mystxcode.app/files/usr/bin/am"] != md5sum([]byte(am)) {
+		if res.md5s["data/data/com.mystxc/files/usr/bin/am"] != md5sum([]byte(am)) {
 			t.Fatalf("%v: md5 of am wrong", format)
 		}
 	}
@@ -227,9 +170,9 @@ func keys(m map[string]entry) []string {
 }
 
 func TestReplaceSums(t *testing.T) {
-	c := []byte(strings.Repeat("0", 32) + "  data/data/com.mystxcode.app/files/usr/bin/am\n" + strings.Repeat("1", 32) + "  other\n")
-	replaceSums(c, map[string]string{"data/data/com.mystxcode.app/files/usr/bin/am": strings.Repeat("a", 32)})
-	if string(c) != strings.Repeat("a", 32)+"  data/data/com.mystxcode.app/files/usr/bin/am\n"+strings.Repeat("1", 32)+"  other\n" {
+	c := []byte(strings.Repeat("0", 32) + "  data/data/com.mystxc/files/usr/bin/am\n" + strings.Repeat("1", 32) + "  other\n")
+	replaceSums(c, map[string]string{"data/data/com.mystxc/files/usr/bin/am": strings.Repeat("a", 32)})
+	if string(c) != strings.Repeat("a", 32)+"  data/data/com.mystxc/files/usr/bin/am\n"+strings.Repeat("1", 32)+"  other\n" {
 		t.Fatalf("got %q", c)
 	}
 }
@@ -288,15 +231,15 @@ func TestRelocateDeb(t *testing.T) {
 		return readTar(t, b)
 	}
 	d := read(members[2])
-	newAm := d["./data/data/com.mystxcode.app/files/usr/bin/am"].content
-	if newAm != strings.ReplaceAll(amContent, "/data/data/com.termux", "/data/data/com.mystxcode.app") {
+	newAm := d["./data/data/com.mystxc/files/usr/bin/am"].content
+	if newAm != strings.ReplaceAll(amContent, "/data/data/com.termux", "/data/data/com.mystxc") {
 		t.Fatalf("am = %q", newAm)
 	}
 	c := read(members[1])
-	if want := md5sum([]byte(newAm)) + "  data/data/com.mystxcode.app/files/usr/bin/am\n"; c["./md5sums"].content != want {
+	if want := md5sum([]byte(newAm)) + "  data/data/com.mystxc/files/usr/bin/am\n"; c["./md5sums"].content != want {
 		t.Fatalf("md5sums = %q, want %q", c["./md5sums"].content, want)
 	}
-	if !strings.Contains(c["./postinst"].content, "/data/data/com.mystxcode.app/files/usr/libexec") {
+	if !strings.Contains(c["./postinst"].content, "/data/data/com.mystxc/files/usr/libexec") {
 		t.Fatalf("postinst = %q", c["./postinst"].content)
 	}
 

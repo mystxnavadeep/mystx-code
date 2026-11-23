@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Debug builds (com.mystxcode.debug) have no sharedUserId: a shared user is tied to the signing key, so a debug APK signed with
+<!-- Debug builds (com.mystxd) have no sharedUserId: a shared user is tied to the signing key, so a debug APK signed with
      another machine's debug key could not be installed over one already on the phone. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"

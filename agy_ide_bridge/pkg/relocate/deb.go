@@ -167,48 +167,32 @@ func relocateDeb(path string, rw *rewriter) (bool, error) {
 	}
 
 	dir := filepath.Dir(path)
-	dataTmp, err := os.CreateTemp(dir, ".mystxcode-data-*")
+	dataTmp, err := os.CreateTemp(dir, ".antigem-data-*")
 	if err != nil {
 		return false, err
 	}
 	defer os.Remove(dataTmp.Name())
 	defer dataTmp.Close()
 
-	// data first: the control archive's md5sums need the new files' sums. The members are read fully and
-	// rewritten in memory: rewriteTarAll changes lengths (the new package name is longer than "com.termux"),
-	// which the streaming rewriteTar cannot do.
-	dataBytes, dataRes, err := rewriteTarMemberAll(f, *data, rw, nil)
+	// data first: the control archive's md5sums need the new files' sums
+	dataRes, err := rewriteMember(rw, f, *data, dataTmp, nil)
 	if err != nil {
 		return false, fmt.Errorf("data: %w", err)
 	}
-	gz := gzip.NewWriter(dataTmp)
-	if _, err := gz.Write(dataBytes); err != nil {
-		return false, fmt.Errorf("data: %w", err)
-	}
-	if err := gz.Close(); err != nil {
-		return false, fmt.Errorf("data: %w", err)
-	}
-	controlBytes, controlRes, err := rewriteTarMemberAll(f, *control, rw, dataRes.md5s)
+	var controlBuf bytes.Buffer
+	controlRes, err := rewriteMember(rw, f, *control, &controlBuf, dataRes.md5s)
 	if err != nil {
 		return false, fmt.Errorf("control: %w", err)
 	}
 	if !dataRes.changed && !controlRes.changed {
 		return false, nil
 	}
-	var controlBuf bytes.Buffer
-	gz = gzip.NewWriter(&controlBuf)
-	if _, err := gz.Write(controlBytes); err != nil {
-		return false, fmt.Errorf("control: %w", err)
-	}
-	if err := gz.Close(); err != nil {
-		return false, fmt.Errorf("control: %w", err)
-	}
 
 	dataSize, err := dataTmp.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return false, err
 	}
-	out, err := os.CreateTemp(dir, ".mystxcode-deb-*")
+	out, err := os.CreateTemp(dir, ".antigem-deb-*")
 	if err != nil {
 		return false, err
 	}

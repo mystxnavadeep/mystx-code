@@ -14,10 +14,7 @@ import (
 
 const chunkSize = 256 * 1024
 
-// rewriter replaces every old with new in bytes, except where old is followed by a kept suffix. The replacement
-// may be longer or shorter than the match: the new app's package name (com.mystxcode.app) is longer than
-// "com.termux". The streaming rewriteIn is same-length only; rewriteOut builds the rewritten output in a new
-// array.
+// rewriter replaces every old with new (same length) in bytes, except where old is followed by a kept suffix.
 type rewriter struct {
 	old, new []byte
 	keep     [][]byte
@@ -53,39 +50,6 @@ func (rw *rewriter) keptAt(buf []byte, at int) bool {
 	return false
 }
 
-// rewriteOut appends to out the rewritten form of buf[:n]: every old not followed by a kept suffix is replaced by
-// new, kept ones are copied as they are, and everything else byte by byte. The output may be longer or shorter
-// than the input.
-func (rw *rewriter) rewriteOut(out []byte, buf []byte, n int) []byte {
-	i := 0
-	for i < n {
-		j := bytes.Index(buf[i:n], rw.old)
-		if j < 0 {
-			return append(out, buf[i:n]...)
-		}
-		j += i
-		if !rw.keptAt(buf[:n], j+len(rw.old)) {
-			out = append(out, buf[i:j]...)
-			out = append(out, rw.new...)
-		} else {
-			out = append(out, buf[i:j+len(rw.old)]...)
-		}
-		i = j + len(rw.old)
-	}
-	return out
-}
-
-// rewriteAll returns buf rewritten (see rewriteOut) and whether anything changed.
-func (rw *rewriter) rewriteAll(b []byte) ([]byte, bool) {
-	out := rw.rewriteOut(nil, b, len(b))
-	return out, !bytes.Equal(out, b)
-}
-
-// setTarSize writes the size field of a tar header (GNU style: octal digits + NUL).
-func setTarSize(h []byte, size int64) {
-	copy(h[124:136], fmt.Sprintf("%011o\x00", size))
-}
-
 // rewriteIn replaces in place in buf[:n] the matches starting at or before limit (the caller guarantees each has
 // its whole match and lookahead inside buf[:n] unless n is the end of the data). It returns the index up to which
 // buf is final, and whether something changed.
@@ -118,6 +82,12 @@ func (rw *rewriter) rewriteIn(buf []byte, n, limit int) (int, bool) {
 		done = n
 	}
 	return done, changed
+}
+
+// rewriteAll rewrites a whole buffer in place.
+func (rw *rewriter) rewriteAll(b []byte) bool {
+	_, changed := rw.rewriteIn(b, len(b), len(b)-len(rw.old))
+	return changed
 }
 
 // copyRewritten copies exactly n bytes from r to w, rewritten, feeding h (if not nil) with what is written.
@@ -253,7 +223,7 @@ func (rw *rewriter) rewriteTar(w io.Writer, r io.Reader, md5sums map[string]stri
 			_, err := io.Copy(w, r)
 			return res, err
 		}
-		if _, c := rw.rewriteAll(hdr); c {
+		if rw.rewriteAll(hdr) {
 			res.changed = true
 		}
 		setTarChecksum(hdr)
@@ -289,7 +259,7 @@ func (rw *rewriter) rewriteTar(w io.Writer, r io.Reader, md5sums map[string]stri
 			if _, err := io.ReadFull(r, content); err != nil {
 				return res, err
 			}
-			if _, c := rw.rewriteAll(content[:size]); c {
+			if rw.rewriteAll(content[:size]) {
 				res.changed = true
 			}
 			switch typ {
@@ -314,7 +284,7 @@ func (rw *rewriter) rewriteTar(w io.Writer, r io.Reader, md5sums map[string]stri
 				if _, err := io.ReadFull(r, content); err != nil {
 					return res, err
 				}
-				if _, c := rw.rewriteAll(content); c {
+				if rw.rewriteAll(content) {
 					res.changed = true
 				}
 				replaceSums(content, md5sums)
@@ -341,110 +311,6 @@ func (rw *rewriter) rewriteTar(w io.Writer, r io.Reader, md5sums map[string]stri
 			}
 		}
 	}
-}
-
-// rewriteTarAll rewrites a whole decompressed tar stream into a new byte slice. It is the path for the rewrites
-// whose target is longer or shorter than the match ("com.termux" -> "com.mystxcode.app"): the streaming
-// rewriteIn is same-length only. The same rules as rewriteTar: skipped extensions are left as they are, an
-// md5sums file gets the new files' sums, long names and pax headers are rewritten, the output stays readable.
-func rewriteTarAll(r io.Reader, rw *rewriter, md5sums map[string]string) ([]byte, tarResult, error) {
-	res := tarResult{md5s: map[string]string{}}
-	b, err := io.ReadAll(r)
-	if err != nil {
-		return nil, res, err
-	}
-	out := make([]byte, 0, len(b)+1024)
-	var longName, paxName string
-	for i := 0; i+512 <= len(b); {
-		hdr := b[i : i+512]
-		if bytes.Count(hdr, []byte{0}) == 512 { // end of the archive: the rest (zero blocks) as it is
-			out = append(out, b[i:]...)
-			break
-		}
-		hdr, changed := rw.rewriteAll(hdr)
-		if changed {
-			res.changed = true
-		}
-		size, err := parseTarNumber(hdr[124:136])
-		if err != nil {
-			return nil, res, fmt.Errorf("tar size: %w", err)
-		}
-		padded := (size + 511) / 512 * 512
-		if i+512+int(padded) > len(b) {
-			return nil, res, fmt.Errorf("tar entry at offset %d overruns the archive", i)
-		}
-		content := b[i+512 : i+512+int(size)]
-		typ := hdr[156]
-
-		name := cString(hdr[0:100])
-		if string(hdr[257:262]) == "ustar" {
-			if prefix := cString(hdr[345:500]); prefix != "" {
-				name = prefix + "/" + name
-			}
-		}
-		if longName != "" {
-			name, longName = longName, ""
-		}
-		if paxName != "" {
-			name, paxName = paxName, ""
-		}
-		key := normalize(name)
-
-		switch typ {
-		case '0', 0, '7':
-			nc := rw.rewriteOut(nil, content, len(content))
-			if key == "md5sums" && md5sums != nil {
-				replaceSums(nc, md5sums)
-			}
-			h := md5.New()
-			h.Write(nc)
-			res.md5s[key] = hex.EncodeToString(h.Sum(nil))
-			setTarSize(hdr, int64(len(nc)))
-			newPadded := (int64(len(nc)) + 511) / 512 * 512
-			out = append(out, hdr...)
-			out = append(out, nc...)
-			if pad := newPadded - int64(len(nc)); pad > 0 {
-				out = append(out, make([]byte, pad)...)
-			}
-		case 'L', 'K', 'x', 'g': // GNU long names, pax headers: small, rewritten whole
-			if padded > 16*1024*1024 {
-				return nil, res, fmt.Errorf("tar: %c entry of %d bytes", typ, size)
-			}
-			nc := rw.rewriteOut(nil, content, len(content))
-			setTarSize(hdr, int64(len(nc)))
-			newPadded := (int64(len(nc)) + 511) / 512 * 512
-			out = append(out, hdr...)
-			out = append(out, nc...)
-			if pad := newPadded - int64(len(nc)); pad > 0 {
-				out = append(out, make([]byte, pad)...)
-			}
-			switch typ {
-			case 'L':
-				longName = cString(nc)
-			case 'x':
-				paxName = paxValue(nc, "path")
-			}
-		default: // directories, links, devices: as they are, with their rewritten names
-			out = append(out, hdr...)
-			out = append(out, b[i+512+int(size):i+512+int(padded)]...)
-		}
-		i += 512 + int(padded)
-	}
-	return out, res, nil
-}
-
-// rewriteTarMemberAll rewrites one decompressed tar member of the .deb into memory (see rewriteTarAll).
-func rewriteTarMemberAll(f *os.File, m arMember, rw *rewriter, md5sums map[string]string) ([]byte, tarResult, error) {
-	r, wait, err := decompressed(f, m)
-	if err != nil {
-		return nil, tarResult{}, err
-	}
-	b, res, err := rewriteTarAll(r, rw, md5sums)
-	io.Copy(io.Discard, r) // let the decompressor finish
-	if werr := wait(); err == nil {
-		err = werr
-	}
-	return b, res, err
 }
 
 // replaceSums puts the new md5 of each listed file into an md5sums file ("<32 hex>  <path>" lines), in place.
