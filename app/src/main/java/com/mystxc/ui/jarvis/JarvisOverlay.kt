@@ -323,7 +323,7 @@ internal fun ActivityCard(
         Modifier
             .widthIn(min = 220.dp, max = 340.dp)
             .clip(shape)
-            .background(Brush.verticalGradient(listOf(GlassTop, GlassBottom)))
+            .background(Brush.verticalGradient(colors = listOf(GlassTop, GlassBottom), startY = 0f, endY = 1f))
             .border(1.dp, Brush.linearGradient(listOf(accent.copy(alpha = 0.7f), Color.White.copy(alpha = 0.05f), accent.copy(alpha = 0.25f))), shape)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
@@ -592,7 +592,7 @@ private fun FullScreenJarvis(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xF0070B14), Color(0xF2101828))))
+            .background(Brush.verticalGradient(colors = listOf(Color(0xF0070B14), Color(0xF2101828)), startY = 0f, endY = 1f))
             // swallow touches so nothing behind the overlay is hit by accident
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { },
         contentAlignment = Alignment.Center

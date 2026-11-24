@@ -181,8 +181,8 @@ fun JarvisQuickSettings(onClose: () -> Unit, floating: Boolean = false) {
                 .widthIn(max = 600.dp)
                 .fillMaxHeight(if (floating) 1f else 0.8f)
                 .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFA111A2C), Color(0xFC070B14))))
-                .border(1.dp, Brush.verticalGradient(listOf(Cyan.copy(alpha = 0.5f), Color.Transparent)), RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                .background(Brush.verticalGradient(colors = listOf(Color(0xFA111A2C), Color(0xFC070B14)), startY = 0f, endY = 1f))
+                .border(1.dp, Brush.verticalGradient(colors = listOf(Cyan.copy(alpha = 0.5f), Color.Transparent), startY = 0f, endY = 1f), RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp)

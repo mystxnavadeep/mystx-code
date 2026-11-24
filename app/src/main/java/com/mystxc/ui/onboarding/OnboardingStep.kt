@@ -71,7 +71,7 @@ fun OnboardingStepScreen(
             Column(
                 Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(listOf(accent.copy(alpha = 0.10f), Color.Transparent, Color.Transparent)))
+                    .background(Brush.verticalGradient(colors = listOf(accent.copy(alpha = 0.10f), Color.Transparent, Color.Transparent), startY = 0f, endY = 1f))
                     .statusBarsPadding()
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally

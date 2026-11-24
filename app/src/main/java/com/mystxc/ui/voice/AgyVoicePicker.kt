@@ -117,7 +117,7 @@ private fun PickerContent(
     val deep by animateColorAsState(rgbColor(current.deep), tween(450), label = "deep")
 
     Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(deep, Color(0xFF07080C), Color(0xFF07080C))))
+        Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(deep, Color(0xFF07080C), Color(0xFF07080C)), startY = 0f, endY = 1f))
     ) {
         Column(Modifier.fillMaxSize().systemBarsPadding().padding(vertical = 12.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {

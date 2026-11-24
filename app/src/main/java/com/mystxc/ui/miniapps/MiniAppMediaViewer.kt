@@ -79,7 +79,7 @@ fun MediaViewerDialog(d: NativeDialog.MediaViewer) {
             }
             AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut()) {
                 Row(
-                    Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xAA000000), Color.Transparent)))
+                    Modifier.fillMaxWidth().background(Brush.verticalGradient(colors = listOf(Color(0xAA000000), Color.Transparent), startY = 0f, endY = 1f))
                         .statusBarsPadding().padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

@@ -194,7 +194,7 @@ private fun CallContent(st: AgyVoiceCall.State, agentWorking: Boolean, onOpenAgy
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(rgb(voice.deep).copy(alpha = 1f), Ink, Ink)))
+            .background(Brush.verticalGradient(colors = listOf(rgb(voice.deep).copy(alpha = 1f), Ink, Ink), startY = 0f, endY = 1f))
     ) {
         // soft colour wash behind the orb
         Canvas(Modifier.fillMaxSize()) {
@@ -874,7 +874,7 @@ fun AgyVoiceFloatingPanel(
             Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(Brush.verticalGradient(listOf(rgb(voice.deep), Ink, Ink)))
+                .background(Brush.verticalGradient(colors = listOf(rgb(voice.deep), Ink, Ink), startY = 0f, endY = 1f))
         ) {
             // soft colour wash behind the orb
             Canvas(Modifier.fillMaxSize()) {

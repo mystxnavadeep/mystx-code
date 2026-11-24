@@ -27,9 +27,17 @@ object GlassTokens {
     /** Layered translucent dark glass base: #0E1526 at 45%-60% opacity. */
     val SurfaceTint = Color(0xFF0E1526)
     /** Subtle vertical white sheen over the base: #FFFFFF 12% at the top, fading to #FFFFFF 3% at the bottom. */
-    val Sheen = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.03f)))
+    val Sheen = Brush.verticalGradient(
+        colors = listOf(Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.03f)),
+        startY = 0f,
+        endY = 1f
+    )
     /** 1dp top-lit specular border: #FFFFFF 24% at the top, fading to #FFFFFF 6% at the bottom. */
-    val BorderSheen = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.06f)))
+    val BorderSheen = Brush.verticalGradient(
+        colors = listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.06f)),
+        startY = 0f,
+        endY = 1f
+    )
     /** Corner radii: 20dp cards/panels, 28dp pill bars. */
     val CardRadius = 20.dp
     val PillRadius = 28.dp
@@ -51,8 +59,13 @@ fun AmbientBackdrop(content: @Composable () -> Unit) {
             .fillMaxSize()
             .drawWithContent {
                 drawRect(
-                    if (dark) Brush.verticalGradient(listOf(GlassTokens.CanvasTop, GlassTokens.CanvasMid, GlassTokens.CanvasEdge))
-                    else Brush.verticalGradient(listOf(GlassTokens.CanvasTopLight, GlassTokens.CanvasMidLight))
+                    if (dark) Brush.verticalGradient(
+                        colors = listOf(GlassTokens.CanvasTop, GlassTokens.CanvasMid, GlassTokens.CanvasEdge),
+                        startY = 0f, endY = 1f
+                    ) else Brush.verticalGradient(
+                        colors = listOf(GlassTokens.CanvasTopLight, GlassTokens.CanvasMidLight),
+                        startY = 0f, endY = 1f
+                    )
                 )
                 drawCircle(Color(0x4D00E5FF), radius = size.width * 0.82f, center = Offset(size.width * -0.1f, size.height * -0.1f))
                 drawCircle(Color(0x399D4EDD), radius = size.width * 0.55f, center = Offset(size.width * 1.12f, size.height * 0.92f))
